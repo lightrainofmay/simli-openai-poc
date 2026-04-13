@@ -92,7 +92,14 @@ def require_env(name: str) -> str:
 
 @app.get("/")
 def index() -> FileResponse:
-    return FileResponse(WEB_DIR / "index.html")
+    return FileResponse(
+        WEB_DIR / "index.html",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 def _env_flag(name: str, default: str = "1") -> bool:
@@ -109,7 +116,12 @@ def config() -> JSONResponse:
             "agentName": os.getenv("LIVEKIT_AGENT_NAME", "xiaoyuqiao"),
             "showAdvancedConnection": _env_flag("WEB_SHOW_ADVANCED", "1"),
             "scenarios": DEMO_SCENARIOS,
-        }
+        },
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
     )
 
 
