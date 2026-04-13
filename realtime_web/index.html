@@ -520,6 +520,9 @@
         <button id="newRoomBtn" type="button" class="btn">
           <span class="lao">ຫ້ອງໃໝ່</span> · 新房间
         </button>
+        <button id="micBtn" type="button" class="btn" disabled title="先进房后再开麦克风">
+          <span class="lao">ເປີດໄມໂຄຣໂຟນ</span> · 开启麦克风
+        </button>
       </div>
       <div id="status">ກຳລັງໂຫຼດ… · 准备中…</div>
 
@@ -613,6 +616,7 @@
     const connectBtn = document.getElementById("connectBtn");
     const disconnectBtn = document.getElementById("disconnectBtn");
     const newRoomBtn = document.getElementById("newRoomBtn");
+    const micBtn = document.getElementById("micBtn");
 
     let room = null;
     const lastShownText = { user: "", agent: "" };
@@ -624,6 +628,25 @@
           setTimeout(() => reject(new Error(`${label} 超过 ${ms / 1000} 秒仍未完成（可检查网络、VPN，或 LIVEKIT_URL 是否为 wss://）`)), ms);
         }),
       ]);
+    }
+
+    function attachExistingRemoteTracks(r) {
+      if (!r) return;
+      try {
+        r.remoteParticipants.forEach((p) => {
+          const pubs = p.trackPublications;
+          const values = pubs && typeof pubs.values === "function" ? Array.from(pubs.values()) : [];
+          for (const pub of values) {
+            const t = pub.track;
+            if (!t || !pub.isSubscribed) continue;
+            if (t.kind === Track.Kind.Video) t.attach(videoEl);
+            if (t.kind === Track.Kind.Audio) t.attach();
+            log(`attached existing ${t.kind} from ${p.identity}`);
+          }
+        });
+      } catch (e) {
+        log(`attachExistingRemoteTracks: ${e?.message || e}`);
+      }
     }
 
     const HAN_IN_MESSAGE_RE = /[\u3007\u4e00-\u9fff\u3400-\u4dbf]/;
@@ -833,6 +856,7 @@
         lastShownText.user = "";
         lastShownText.agent = "";
 
+        micBtn.disabled = true;
         setStatus("ກຳລັງຂໍ token… · 正在申请 token…");
         const tokenResp = await fetchToken();
         const token = tokenResp.token;
@@ -854,6 +878,10 @@
         room.on(RoomEvent.Reconnecting, () => log("livekit: reconnecting…"));
         room.on(RoomEvent.Reconnected, () => log("livekit: reconnected"));
 
+        room.on(RoomEvent.MediaDevicesError, (e) => {
+          log(`media devices error: ${e?.message || String(e)}`);
+        });
+
         room.on(RoomEvent.TrackSubscribed, (track) => {
           log(`track subscribed: ${track.kind}`);
           if (track.kind === Track.Kind.Video) track.attach(videoEl);
@@ -866,18 +894,25 @@
         });
 
         room.on(RoomEvent.Connected, () => {
-          setStatus("ເຊື່ອມຕໍ່ແລ້ວ · ລໍຖ້າວິດີໂອດິຈິຕອນ · 已连接，可语音或文字对话。");
+          setStatus(
+            "ເຊື່ອມຕໍ່ແລ້ວ · ສາມາດພິມຂໍ້ຄວາມ · 已连接，可先文字对话；需要语音时请点「开启麦克风」（避免自动开麦在部分网络卡住）。",
+          );
           log("room connected");
           setTextInputEnabled(true);
+          micBtn.disabled = false;
         });
 
         room.on(RoomEvent.Disconnected, () => {
           setStatus("ຕັດການເຊື່ອມຕໍ່ແລ້ວ · 已断开连接");
           log("room disconnected");
           setTextInputEnabled(false);
+          micBtn.disabled = true;
         });
 
-        room.on(RoomEvent.ParticipantConnected, (p) => log(`participant connected: ${p.identity}`));
+        room.on(RoomEvent.ParticipantConnected, (p) => {
+          log(`participant connected: ${p.identity}`);
+          attachExistingRemoteTracks(room);
+        });
         room.on(RoomEvent.ParticipantDisconnected, (p) => log(`participant disconnected: ${p.identity}`));
 
         room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
@@ -958,11 +993,13 @@
         }
         await withTimeout(room.connect(lkUrl, token), 60000, "LiveKit 信令连接");
         log(`room.connect 完成，state=${room.state}，远端参与者数=${room.remoteParticipants.size}`);
-        await room.localParticipant.setMicrophoneEnabled(true);
-        log("microphone enabled");
+        attachExistingRemoteTracks(room);
+
         if (room.state === ConnectionState.Connected) {
           setTextInputEnabled(true);
+          micBtn.disabled = false;
         }
+
         setTimeout(() => {
           if (!room || room.state !== ConnectionState.Connected) return;
           if (room.remoteParticipants.size === 0) {
@@ -983,8 +1020,28 @@
         await room.disconnect();
         room = null;
       }
+      micBtn.disabled = true;
       setStatus("ຕັດການເຊື່ອມຕໍ່ແລ້ວ · 已断开连接");
     }
+
+    micBtn.addEventListener("click", async () => {
+      if (!room || room.state !== ConnectionState.Connected) {
+        setStatus("ຍັງບໍ່ໄດ້ເຊື່ອມຕໍ່ · 请先连接数字人");
+        return;
+      }
+      micBtn.disabled = true;
+      setStatus("ກຳລັງເປີດໄມ… · 正在请求麦克风…");
+      try {
+        await withTimeout(room.localParticipant.setMicrophoneEnabled(true), 35000, "麦克风");
+        log("microphone enabled");
+        setStatus("ເປີດໄມແລ້ວ · ສາມາດເວົ້າໄດ້ · 麦克风已开，可语音对话");
+      } catch (e) {
+        const m = e?.message || String(e);
+        log(`microphone failed: ${m}`);
+        setStatus(`ເປີດໄມລົ້ມເຫລວ · 开麦失败：${m}（可继续用文字）`);
+        micBtn.disabled = false;
+      }
+    });
 
     const CHAT_TOPIC = "lk.chat";
 
@@ -1026,6 +1083,7 @@
     });
 
     setTextInputEnabled(false);
+    micBtn.disabled = true;
 
     loadConfig().catch((err) => {
       const msg = err?.message || String(err);
