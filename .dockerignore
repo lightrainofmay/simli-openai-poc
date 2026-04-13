@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+.env
+.env.*
+!.env.example
+!.env.livekit.example
+.logs
+.run
+output
+.git
+*.md

@@ -1,0 +1,28 @@
+# 密钥与本地环境（勿提交）
+.env
+.env.local
+.env.livekit
+secrets*.env
+*.pem
+
+# 保留模板
+!.env.example
+!.env.livekit.example
+
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.logs/
+.run/
+output/
+
+.DS_Store
+*.log
+
+# LiveKit CLI 本地状态
+livekit.toml

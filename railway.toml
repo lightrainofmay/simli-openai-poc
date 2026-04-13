@@ -1,0 +1,10 @@
+# https://docs.railway.com/deploy/dockerfiles
+# 仓库根目录若不是本目录，请在 Railway 项目里将 Root Directory 设为 simli_openai_poc
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.web"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 300
