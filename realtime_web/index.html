@@ -617,6 +617,15 @@
     let room = null;
     const lastShownText = { user: "", agent: "" };
 
+    function withTimeout(promise, ms, label) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`${label} 超过 ${ms / 1000} 秒仍未完成（可检查网络、VPN，或 LIVEKIT_URL 是否为 wss://）`)), ms);
+        }),
+      ]);
+    }
+
     const HAN_IN_MESSAGE_RE = /[\u3007\u4e00-\u9fff\u3400-\u4dbf]/;
 
     function normalizeCnText(text) {
@@ -839,6 +848,12 @@
         setStatus("ກຳລັງເຊື່ອມຕໍ່ LiveKit… · 正在连接 LiveKit…");
         room = new Room({ adaptiveStream: true, dynacast: true });
 
+        room.on(RoomEvent.ConnectionStateChanged, (state) => {
+          log(`connection state: ${state}`);
+        });
+        room.on(RoomEvent.Reconnecting, () => log("livekit: reconnecting…"));
+        room.on(RoomEvent.Reconnected, () => log("livekit: reconnected"));
+
         room.on(RoomEvent.TrackSubscribed, (track) => {
           log(`track subscribed: ${track.kind}`);
           if (track.kind === Track.Kind.Video) track.attach(videoEl);
@@ -937,12 +952,25 @@
         });
 
         setTextInputEnabled(false);
-        await room.connect(livekitUrlEl.value.trim(), token);
+        const lkUrl = livekitUrlEl.value.trim();
+        if (!lkUrl.startsWith("wss://") && !lkUrl.startsWith("ws://")) {
+          throw new Error("LIVEKIT_URL 应以 wss:// 开头，请检查 Railway Variables 或高级连接里的地址");
+        }
+        await withTimeout(room.connect(lkUrl, token), 60000, "LiveKit 信令连接");
+        log(`room.connect 完成，state=${room.state}，远端参与者数=${room.remoteParticipants.size}`);
         await room.localParticipant.setMicrophoneEnabled(true);
         log("microphone enabled");
         if (room.state === ConnectionState.Connected) {
           setTextInputEnabled(true);
         }
+        setTimeout(() => {
+          if (!room || room.state !== ConnectionState.Connected) return;
+          if (room.remoteParticipants.size === 0) {
+            setStatus(
+              "ເຂົ້າຫ້ອງແລ້ວ · ຍັງບໍ່ເຫັນຕົວເລກ · 已进房，约 2.5s 内仍无数字人；请确认 Agent 在跑（本机 ./start_all.sh 或 LiveKit Cloud 已 deploy），Railway 上 LIVEKIT_AGENT_NAME 与 Worker 一致。",
+            );
+          }
+        }, 2500);
       } catch (err) {
         const msg = err?.message || String(err);
         setStatus(`ເຊື່ອມຕໍ່ລົ້ມເຫລວ · 连接失败：${msg}`);
