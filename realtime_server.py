@@ -23,9 +23,9 @@ load_dotenv(BASE_DIR / ".env.livekit")
 DEMO_SCENARIOS: list[dict[str, str]] = [
     {
         "id": "checkin",
-        "titleLao": "ຫ້ອງການ ແລະ ລົງທະບຽນ",
+        "titleLao": "ເຊັກອີນ",
         "titleZh": "报到办事",
-        "blurbLao": "ຫໍພັກ · ຕ່າງປະເທດ · ໂຮງຫມໍ",
+        "blurbLao": "ການເຂົ້າພັກທີ່ຫໍ · ສຳນັກງານສາກົນ · ການຕິດຕໍ່ສື່ສານກັບໂຮງໝໍໂຮງຮຽນ",
         "blurbZh": "宿舍入住 · 国际处 · 校医院沟通",
         "prompt": "我刚到学校要去宿管处办入住，用中文该怎么开口？",
     },
@@ -33,7 +33,7 @@ DEMO_SCENARIOS: list[dict[str, str]] = [
         "id": "classroom",
         "titleLao": "ໃນຫ້ອງຮຽນ",
         "titleZh": "课堂交流",
-        "blurbLao": "ວຽກຮຽນ · ລາພັກ · ກຸ່ມສົນທະນາ",
+        "blurbLao": "ການເຂົ້າໃຈວຽກບ້ານ · ການສະແດງອອກໃນການລາພັກ · ກຸ່ມສົນທະນາ",
         "blurbZh": "作业理解 · 请假表达 · 小组讨论",
         "prompt": "老师布置的作业我没完全听懂，用中文怎么礼貌地问？",
     },
@@ -41,7 +41,7 @@ DEMO_SCENARIOS: list[dict[str, str]] = [
         "id": "daily",
         "titleLao": "ຊີວິດປະຈຳວັນ",
         "titleZh": "日常生活",
-        "blurbLao": "ພັດສະດຸ · ຖາມທາງ · ໂຮງຫມໍ",
+        "blurbLao": "ເບີໂທພະນັກງານຂົ່ນສົ່ງ · ຖາມທາງ · ການລົງທະບຽນ ແລະ ການສື່ສານກ່ຽວກັບຫໍພັກ",
         "blurbZh": "快递电话 · 问路 · 挂号与宿舍沟通",
         "prompt": "我想打电话问快递到哪了，中文电话开头怎么说？",
     },
@@ -67,7 +67,19 @@ _TRANSLATE_SYSTEM = (
     "You translate into Lao as used in Laos. Output ONLY the translation text: "
     "no quotes, no labels, no explanation. "
     "If the input is already entirely in Lao, output it unchanged (only trim spaces). "
-    "Preserve names in their original script when natural."
+    "Preserve names in their original script when natural. "
+    "Prefer the following fixed glossary when these Chinese phrases appear: "
+    "中文之桥=ຂົວພາສາຈີນ; "
+    "老挝留学生在华校园中文学伴=ຄູ່ສອນພາສາຈີນສຳລັບນັກສຶກສາລາວໃນວິທະຍາເຂດຈີນ; "
+    "三个实用场景·点击卡片可将示例问题填入输入框="
+    "ສາມສະຖານະການທີ່ໃຊ້ໄດ້ຈິງ: ການຄລິກທີ່ບັດຊ່ວຍໃຫ້ທ່ານສາມາດຕື່ມຂໍ້ມູນຕົວຢ່າງຄຳຖາມໃນກ່ອງປ້ອນຂໍ້ມູນໄດ້; "
+    "报到办事=ເຊັກອີນ; "
+    "快递电话=ເບີໂທພະນັກງານຂົ່ນສົ່ງ; "
+    "国际处=ສຳນັກງານສາກົນ; "
+    "校医院沟通=ການຕິດຕໍ່ສື່ສານກັບໂຮງໝໍໂຮງຮຽນ; "
+    "作业理解=ການເຂົ້າໃຈວຽກບ້ານ; "
+    "请假表达=ການສະແດງອອກໃນການລາພັກ; "
+    "挂号与宿舍沟通=ການລົງທະບຽນ ແລະ ການສື່ສານກ່ຽວກັບຫໍພັກ."
 )
 
 
