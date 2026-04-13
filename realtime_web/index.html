@@ -620,6 +620,34 @@
 
     let room = null;
     const lastShownText = { user: "", agent: "" };
+    let agentWaitIntervalId = null;
+
+    function stopAgentWaitTicker() {
+      if (agentWaitIntervalId !== null) {
+        clearInterval(agentWaitIntervalId);
+        agentWaitIntervalId = null;
+      }
+    }
+
+    /** 已进房但尚无远端参与者时，每秒刷新状态（云端冷启动 + Simli 常见数十秒） */
+    function startAgentWaitTicker() {
+      stopAgentWaitTicker();
+      const started = Date.now();
+      agentWaitIntervalId = setInterval(() => {
+        if (!room || room.state !== ConnectionState.Connected) {
+          stopAgentWaitTicker();
+          return;
+        }
+        if (room.remoteParticipants.size > 0) {
+          stopAgentWaitTicker();
+          return;
+        }
+        const sec = Math.floor((Date.now() - started) / 1000);
+        setStatus(
+          `ລໍຖ້າຕົວເລກ ${sec}s… · 已进房，等待数字人 ${sec}s。云端 Agent 冷启动或 Simli 初始化时常见 20–60 秒，可先打字对话；需要语音请之后点「开启麦克风」。`,
+        );
+      }, 1000);
+    }
 
     function withTimeout(promise, ms, label) {
       return Promise.race([
@@ -856,6 +884,7 @@
         lastShownText.user = "";
         lastShownText.agent = "";
 
+        stopAgentWaitTicker();
         micBtn.disabled = true;
         setStatus("ກຳລັງຂໍ token… · 正在申请 token…");
         const tokenResp = await fetchToken();
@@ -882,10 +911,16 @@
           log(`media devices error: ${e?.message || String(e)}`);
         });
 
-        room.on(RoomEvent.TrackSubscribed, (track) => {
+        room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
           log(`track subscribed: ${track.kind}`);
           if (track.kind === Track.Kind.Video) track.attach(videoEl);
           if (track.kind === Track.Kind.Audio) track.attach();
+          if (participant && !participant.isLocal && track.kind === Track.Kind.Video) {
+            stopAgentWaitTicker();
+            setStatus(
+              "ຮັບວິດີໂອຕົວເລກແລ້ວ · 已收到数字人视频画面。",
+            );
+          }
         });
 
         room.on(RoomEvent.TrackUnsubscribed, (track) => {
@@ -894,15 +929,24 @@
         });
 
         room.on(RoomEvent.Connected, () => {
-          setStatus(
-            "ເຊື່ອມຕໍ່ແລ້ວ · ສາມາດພິມຂໍ້ຄວາມ · 已连接，可先文字对话；需要语音时请点「开启麦克风」（避免自动开麦在部分网络卡住）。",
-          );
           log("room connected");
           setTextInputEnabled(true);
           micBtn.disabled = false;
+          if (room.remoteParticipants.size === 0) {
+            setStatus(
+              "ເຊື່ອມຕໍ່ແລ້ວ · ກຳລັງລໍຖ້າຕົວເລກ · 已连接；正在等待数字人进房（云端冷启动时可能需数十秒）…",
+            );
+            startAgentWaitTicker();
+          } else {
+            attachExistingRemoteTracks(room);
+            setStatus(
+              "ເຊື່ອມຕໍ່ແລ້ວ · ສາມາດພິມຂໍ້ຄວາມ · 已连接；可先文字对话，需要语音请点「开启麦克风」。",
+            );
+          }
         });
 
         room.on(RoomEvent.Disconnected, () => {
+          stopAgentWaitTicker();
           setStatus("ຕັດການເຊື່ອມຕໍ່ແລ້ວ · 已断开连接");
           log("room disconnected");
           setTextInputEnabled(false);
@@ -911,6 +955,12 @@
 
         room.on(RoomEvent.ParticipantConnected, (p) => {
           log(`participant connected: ${p.identity}`);
+          if (!p.isLocal) {
+            stopAgentWaitTicker();
+            setStatus(
+              "ຕົວເລກເຂົ້າຫ້ອງແລ້ວ · 数字人已进房；若画面仍黑请再等几秒（Simli 推流）。可先打字或点「开启麦克风」。",
+            );
+          }
           attachExistingRemoteTracks(room);
         });
         room.on(RoomEvent.ParticipantDisconnected, (p) => log(`participant disconnected: ${p.identity}`));
@@ -998,16 +1048,10 @@
         if (room.state === ConnectionState.Connected) {
           setTextInputEnabled(true);
           micBtn.disabled = false;
-        }
-
-        setTimeout(() => {
-          if (!room || room.state !== ConnectionState.Connected) return;
-          if (room.remoteParticipants.size === 0) {
-            setStatus(
-              "ເຂົ້າຫ້ອງແລ້ວ · ຍັງບໍ່ເຫັນຕົວເລກ · 已进房，约 2.5s 内仍无数字人；请确认 Agent 在跑（本机 ./start_all.sh 或 LiveKit Cloud 已 deploy），Railway 上 LIVEKIT_AGENT_NAME 与 Worker 一致。",
-            );
+          if (room.remoteParticipants.size === 0 && agentWaitIntervalId === null) {
+            startAgentWaitTicker();
           }
-        }, 2500);
+        }
       } catch (err) {
         const msg = err?.message || String(err);
         setStatus(`ເຊື່ອມຕໍ່ລົ້ມເຫລວ · 连接失败：${msg}`);
@@ -1016,6 +1060,7 @@
     }
 
     async function disconnect() {
+      stopAgentWaitTicker();
       if (room) {
         await room.disconnect();
         room = null;
