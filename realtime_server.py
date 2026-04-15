@@ -113,7 +113,7 @@ def config() -> JSONResponse:
             "livekitUrl": require_env("LIVEKIT_URL"),
             "defaultRoom": os.getenv("LIVEKIT_DEFAULT_ROOM", "xiaoyuqiao-room"),
             "defaultIdentity": os.getenv("LIVEKIT_DEFAULT_IDENTITY", "student-demo"),
-            "agentName": os.getenv("LIVEKIT_AGENT_NAME", "xiaoyuqiao"),
+            "agentName": os.getenv("LIVEKIT_AGENT_NAME", "xiaoyuqiao-cloud"),
             "showAdvancedConnection": _env_flag("WEB_SHOW_ADVANCED", "1"),
             "scenarios": DEMO_SCENARIOS,
         },
@@ -129,7 +129,7 @@ def config() -> JSONResponse:
 def create_token(req: TokenRequest) -> JSONResponse:
     api_key = require_env("LIVEKIT_API_KEY")
     api_secret = require_env("LIVEKIT_API_SECRET")
-    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "xiaoyuqiao")
+    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "xiaoyuqiao-cloud")
 
     room = req.room.strip()
     identity = req.identity.strip()

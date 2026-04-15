@@ -84,7 +84,7 @@ lk cloud auth
 ```
 
 准备一份 **仅含第三方与业务变量** 的 secrets 文件（例如 `secrets.agent.env`），**不要**写入 `LIVEKIT_URL`、`LIVEKIT_API_KEY`、`LIVEKIT_API_SECRET`——云端会为 Worker **自动注入**这三项（见 [Secrets](https://docs.livekit.io/deploy/agents/secrets.md)）。  
-文件中需包含与本机 `.env.livekit` 类似的键，例如：`SIMLI_API_KEY`、`SIMLI_FACE_ID`、`DEEPGRAM_API_KEY`、`CARTESIA_API_KEY`、`CARTESIA_VOICE_ID`、以及 LLM 用的 `OPENAI_API_KEY` 或 `OPENROUTER_API_KEY` 等；`LIVEKIT_AGENT_NAME` 须与发 token 时一致（默认 `xiaoyuqiao`，与 `realtime_server.py` 里 `RoomAgentDispatch` 一致）。
+文件中需包含与本机 `.env.livekit` 类似的键，例如：`SIMLI_API_KEY`、`SIMLI_FACE_ID`、`DEEPGRAM_API_KEY`、`CARTESIA_API_KEY`、`CARTESIA_VOICE_ID`、以及 LLM 用的 `OPENAI_API_KEY` 或 `OPENROUTER_API_KEY` 等；`LIVEKIT_AGENT_NAME` 须与发 token 时一致（默认 `xiaoyuqiao-cloud`，与 `realtime_server.py` 里 `RoomAgentDispatch` 一致）。
 
 首次注册并部署（会生成 `livekit.toml`，并用本仓库根目录的 **`Dockerfile`** 构建镜像）：
 

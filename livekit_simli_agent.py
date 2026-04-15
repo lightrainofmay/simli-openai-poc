@@ -511,6 +511,6 @@ if __name__ == "__main__":
         WorkerOptions(
             entrypoint_fnc=entrypoint,
             prewarm_fnc=prewarm,
-            agent_name=os.getenv("LIVEKIT_AGENT_NAME", "xiaoyuqiao"),
+            agent_name=os.getenv("LIVEKIT_AGENT_NAME", "xiaoyuqiao-cloud"),
         )
     )
