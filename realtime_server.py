@@ -93,7 +93,7 @@ def require_env(name: str) -> str:
     return value
 
 
-async def _create_dispatch_fallback(*, room: str, agent_name: str) -> None:
+async def _create_dispatch_fallback(*, room: str, agent_name: str) -> tuple[bool, str]:
     """Best-effort dispatch fallback for cases where room_config dispatch is missed."""
     try:
         from livekit import api as lkapi  # import lazily to keep module import lightweight
@@ -104,19 +104,23 @@ async def _create_dispatch_fallback(*, room: str, agent_name: str) -> None:
             api_secret=require_env("LIVEKIT_API_SECRET"),
         )
         try:
-            await client.agent_dispatch.create_dispatch(
+            resp = await client.agent_dispatch.create_dispatch(
                 lkapi.CreateAgentDispatchRequest(
                     room=room,
                     agent_name=agent_name,
                     metadata='{"source":"realtime_web_fallback"}',
                 )
             )
-            logger.info("dispatch fallback created: room=%s agent=%s", room, agent_name)
+            msg = f"dispatch fallback created: room={room} agent={agent_name} id={getattr(resp, 'id', '')}"
+            logger.info(msg)
+            return True, msg
         finally:
             await client.aclose()
     except Exception as exc:  # noqa: BLE001
         # Do not block token issuance if fallback dispatch fails.
-        logger.warning("dispatch fallback failed: room=%s agent=%s err=%s", room, agent_name, exc)
+        msg = f"dispatch fallback failed: room={room} agent={agent_name} err={exc}"
+        logger.warning(msg)
+        return False, msg
 
 
 @app.get("/")
@@ -198,12 +202,24 @@ def create_token(req: TokenRequest) -> JSONResponse:
 
     # Fallback dispatch: create an explicit dispatch in addition to room_config.
     # This improves reliability when automatic dispatch is delayed or missed.
+    dispatch_ok = False
+    dispatch_msg = ""
     try:
-        asyncio.run(_create_dispatch_fallback(room=room, agent_name=agent_name))
+        dispatch_ok, dispatch_msg = asyncio.run(
+            _create_dispatch_fallback(room=room, agent_name=agent_name)
+        )
     except Exception as exc:  # noqa: BLE001
-        logger.warning("dispatch fallback run failed: %s", exc)
+        dispatch_msg = f"dispatch fallback run failed: {exc}"
+        logger.warning(dispatch_msg)
 
-    return JSONResponse({"token": token, "identity": unique_identity})
+    return JSONResponse(
+        {
+            "token": token,
+            "identity": unique_identity,
+            "dispatchFallbackOk": dispatch_ok,
+            "dispatchFallbackMsg": dispatch_msg,
+        }
+    )
 
 
 @app.post("/api/translate")
