@@ -278,13 +278,18 @@
       border-radius: 14px;
       overflow: hidden;
       background: #020617;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     video {
       width: 100%;
       height: min(52vh, 520px);
-      object-fit: cover;
+      object-fit: contain;
+      object-position: center;
       display: block;
+      background: #020617;
     }
 
     .chat-box {
