@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 from pathlib import Path
 from uuid import uuid4
 
@@ -84,6 +85,43 @@ _TRANSLATE_SYSTEM = (
     "请假表达=ການສະແດງອອກໃນການລາພັກ; "
     "挂号与宿舍沟通=ການລົງທະບຽນ ແລະ ການສື່ສານກ່ຽວກັບຫໍພັກ."
 )
+
+
+_REPEATED_CHUNK_RE = re.compile(r"(.{2,4})\1{6,}")
+
+
+def _sanitize_lao_translation(text: str) -> str:
+    """Drop obviously corrupted/hallucinated Lao outputs."""
+    lao = (text or "").strip()
+    if not lao:
+        return ""
+
+    # Remove wrapping quotes once more defensively.
+    if lao.startswith('"') and lao.endswith('"') and len(lao) >= 2:
+        lao = lao[1:-1].strip()
+    if lao.startswith("「") and lao.endswith("」") and len(lao) >= 2:
+        lao = lao[1:-1].strip()
+
+    compact = re.sub(r"\s+", "", lao)
+    if not compact:
+        return ""
+
+    # Hard cap to avoid runaway generations.
+    if len(lao) > 320:
+        lao = lao[:320].rstrip()
+        compact = re.sub(r"\s+", "", lao)
+
+    # Typical corruption pattern in screenshots: short chunk repeated many times.
+    if _REPEATED_CHUNK_RE.search(compact):
+        return ""
+
+    # Another signal: very long text with extremely low character diversity.
+    if len(compact) >= 60:
+        diversity = len(set(compact)) / max(1, len(compact))
+        if diversity < 0.16:
+            return ""
+
+    return lao
 
 
 def require_env(name: str) -> str:
@@ -249,22 +287,21 @@ def translate_to_lao(req: TranslateRequest) -> JSONResponse:
                         {"role": "system", "content": _TRANSLATE_SYSTEM},
                         {"role": "user", "content": text},
                     ],
-                    "max_tokens": 1024,
-                    "temperature": 0.2,
+                    "max_tokens": 220,
+                    "temperature": 0.0,
                 },
             )
         resp.raise_for_status()
         data = resp.json()
-        lao = (
+        raw_lao = (
             (data.get("choices") or [{}])[0]
             .get("message", {})
             .get("content", "")
             or ""
         ).strip()
-        if lao.startswith('"') and lao.endswith('"') and len(lao) >= 2:
-            lao = lao[1:-1].strip()
-        if lao.startswith("「") and lao.endswith("」") and len(lao) >= 2:
-            lao = lao[1:-1].strip()
+        lao = _sanitize_lao_translation(raw_lao)
+        if not lao and raw_lao:
+            logger.warning("translation output dropped as corrupted: %.160s", raw_lao)
         return JSONResponse({"lao": lao, "ok": True})
     except httpx.HTTPStatusError as exc:
         detail = exc.response.text[:500] if exc.response else str(exc)
