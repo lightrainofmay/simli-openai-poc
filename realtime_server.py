@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 import os
 from pathlib import Path
 from uuid import uuid4
@@ -15,6 +17,7 @@ from pydantic import BaseModel, Field
 
 BASE_DIR = Path(__file__).resolve().parent
 WEB_DIR = BASE_DIR / "realtime_web"
+logger = logging.getLogger("xiaoyuqiao-web")
 
 load_dotenv(BASE_DIR / ".env")
 load_dotenv(BASE_DIR / ".env.livekit")
@@ -88,6 +91,32 @@ def require_env(name: str) -> str:
     if not value:
         raise HTTPException(status_code=500, detail=f"Missing {name}")
     return value
+
+
+async def _create_dispatch_fallback(*, room: str, agent_name: str) -> None:
+    """Best-effort dispatch fallback for cases where room_config dispatch is missed."""
+    try:
+        from livekit import api as lkapi  # import lazily to keep module import lightweight
+
+        client = lkapi.LiveKitAPI(
+            url=require_env("LIVEKIT_URL"),
+            api_key=require_env("LIVEKIT_API_KEY"),
+            api_secret=require_env("LIVEKIT_API_SECRET"),
+        )
+        try:
+            await client.agent_dispatch.create_dispatch(
+                lkapi.CreateAgentDispatchRequest(
+                    room=room,
+                    agent_name=agent_name,
+                    metadata='{"source":"realtime_web_fallback"}',
+                )
+            )
+            logger.info("dispatch fallback created: room=%s agent=%s", room, agent_name)
+        finally:
+            await client.aclose()
+    except Exception as exc:  # noqa: BLE001
+        # Do not block token issuance if fallback dispatch fails.
+        logger.warning("dispatch fallback failed: room=%s agent=%s err=%s", room, agent_name, exc)
 
 
 @app.get("/")
@@ -166,6 +195,13 @@ def create_token(req: TokenRequest) -> JSONResponse:
         )
         .to_jwt()
     )
+
+    # Fallback dispatch: create an explicit dispatch in addition to room_config.
+    # This improves reliability when automatic dispatch is delayed or missed.
+    try:
+        asyncio.run(_create_dispatch_fallback(room=room, agent_name=agent_name))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("dispatch fallback run failed: %s", exc)
 
     return JSONResponse({"token": token, "identity": unique_identity})
 
