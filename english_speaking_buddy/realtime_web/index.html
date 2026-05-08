@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="英语口语语伴 · 面向中国学生的实时英语陪练" />
+  <title>英语口语语伴 · English Speaking Buddy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #0a1628;
+      --bg-panel: rgba(15, 30, 52, 0.92);
+      --border: rgba(200, 16, 46, 0.35);
+      --accent-red: #c8102e;
+      --accent-blue: #1e3a5f;
+      --accent-gold: #c9a227;
+      --text: #e8eef5;
+      --muted: rgba(232, 238, 245, 0.72);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+      background: var(--bg-deep);
+      background-image:
+        radial-gradient(ellipse 120% 80% at 50% -20%, rgba(30, 58, 95, 0.45), transparent),
+        linear-gradient(180deg, #0a1628 0%, #050d18 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+    }
+
+    .masthead {
+      text-align: center;
+      padding: 28px 20px 22px;
+      margin-bottom: 20px;
+      border-radius: 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .masthead::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(180deg, #c8102e 0%, #f5f5f5 50%, #003366 100%);
+      border-radius: 16px 0 0 16px;
+    }
+
+    .masthead h1 {
+      margin: 0 0 8px;
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+
+    .masthead .sub-en {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    .masthead .sub-zh {
+      margin: 0 0 14px;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .masthead .tips {
+      max-width: 640px;
+      margin: 0 auto;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--muted);
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      padding-top: 12px;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .panel-title .panel-title-en {
+      display: block;
+      font-size: 0.92rem;
+      color: var(--accent-gold);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .scenario-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .scenario-card {
+      text-align: left;
+      padding: 14px 14px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(201, 162, 39, 0.35);
+      background: rgba(8, 20, 40, 0.65);
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      font: inherit;
+    }
+
+    .scenario-card:hover {
+      border-color: rgba(201, 162, 39, 0.65);
+      background: rgba(12, 28, 52, 0.85);
+    }
+
+    .scenario-card .sc-en {
+      display: block;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fde68a;
+      margin-bottom: 4px;
+    }
+
+    .scenario-card .sc-zh {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .scenario-card .sc-blurb-en {
+      display: block;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: 0.78rem;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .scenario-card .sc-blurb-zh {
+      display: block;
+      font-size: 0.78rem;
+      opacity: 0.75;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .btn {
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      background: rgba(30, 58, 95, 0.55);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.9rem;
+    }
+
+    .btn:hover {
+      background: rgba(30, 58, 95, 0.85);
+    }
+
+    .btn-primary {
+      border-color: rgba(201, 162, 39, 0.55);
+      background: rgba(200, 16, 46, 0.22);
+    }
+
+    .btn-primary:hover {
+      background: rgba(200, 16, 46, 0.32);
+    }
+
+    #status {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: #7dd3fc;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(2, 6, 23, 0.75);
+      color: var(--text);
+      padding: 10px;
+      font: inherit;
+    }
+
+    details.advanced-conn {
+      margin-bottom: 16px;
+    }
+
+    details.advanced-conn summary {
+      cursor: pointer;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(15, 30, 52, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    details.advanced-conn .inner {
+      padding: 14px 4px 4px;
+    }
+
+    .is-hidden {
+      display: none !important;
+    }
+
+    .stage {
+      display: grid;
+      grid-template-columns: 1.28fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .stage {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .video-box {
+      min-height: min(52vh, 520px);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #020617;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    video {
+      width: 100%;
+      height: min(52vh, 520px);
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      background: #020617;
+    }
+
+    .chat-box {
+      height: min(42vh, 360px);
+      overflow: auto;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(2, 6, 23, 0.55);
+      margin-bottom: 10px;
+    }
+
+    .msg {
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .msg .role {
+      font-size: 12px;
+      opacity: 0.75;
+    }
+
+    .msg.user .text {
+      color: #f8fafc;
+    }
+
+    .msg.agent .text {
+      color: #67e8f9;
+    }
+
+    .msg .text .text-han {
+      white-space: pre-wrap;
+      margin-top: 0;
+    }
+
+    .msg .text .text-pinyin {
+      margin-bottom: 6px;
+      font-size: 0.86em;
+      line-height: 1.5;
+      word-break: break-word;
+      font-family: system-ui, "Helvetica Neue", "Noto Sans", sans-serif;
+    }
+
+    .msg.user .text .text-pinyin {
+      color: rgba(248, 250, 252, 0.82);
+    }
+
+    .msg.agent .text .text-pinyin {
+      color: rgba(165, 243, 252, 0.88);
+    }
+
+    .msg .text .text-translation {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      font-size: 0.9em;
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .msg.user .text .text-translation {
+      color: rgba(253, 230, 138, 0.92);
+    }
+
+    .msg.agent .text .text-translation {
+      color: rgba(254, 240, 138, 0.9);
+    }
+
+    .msg .text .text-translation.is-pending {
+      opacity: 0.65;
+      font-style: italic;
+      border-top-style: dashed;
+    }
+
+    .chat-input {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .chat-input input {
+      margin: 0;
+    }
+
+    details.logs-wrap {
+      margin-top: 12px;
+    }
+
+    details.logs-wrap summary {
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .log {
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      line-height: 1.45;
+      color: #93c5fd;
+      max-height: 160px;
+      overflow: auto;
+      margin-top: 8px;
+    }
+
+    .site-footer {
+      text-align: center;
+      margin-top: 28px;
+      padding: 16px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      border-top: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .site-footer .footer-accent {
+      color: rgba(253, 230, 138, 0.85);
+      font-weight: 600;
+    }
+
+    /* Decorative strip (inline SVG) */
+    .page-deco-strip {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin: -8px 0 18px;
+      flex-wrap: wrap;
+      opacity: 0.88;
+      pointer-events: none;
+    }
+
+    .page-deco-strip svg {
+      display: block;
+      filter: drop-shadow(0 2px 8px rgba(201, 162, 39, 0.2));
+    }
+
+    .masthead-deco-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 20px;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .panel-deco {
+      float: right;
+      margin: -4px 0 0 10px;
+      opacity: 0.55;
+    }
+
+    .panel-deco svg {
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      .panel-deco {
+        float: none;
+        margin: 0 auto 10px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="page-deco-strip" aria-hidden="true">
+      <svg width="120" height="36" viewBox="0 0 120 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 18h120M10 18c8-12 22-12 30 0s22 12 30 0 22-12 30 0 22 12 30 0" stroke="#c9a227" stroke-width="1.2" opacity="0.65" />
+        <circle cx="60" cy="18" r="3" fill="#c8102e" opacity="0.75" />
+      </svg>
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <title>装饰</title>
+        <ellipse cx="36" cy="22" rx="10" ry="18" fill="#c9a227" opacity="0.35" transform="rotate(-36 36 36)" />
+        <ellipse cx="36" cy="22" rx="10" ry="18" fill="#c9a227" opacity="0.35" transform="rotate(36 36 36)" />
+        <ellipse cx="36" cy="22" rx="10" ry="18" fill="#c9a227" opacity="0.35" transform="rotate(108 36 36)" />
+        <ellipse cx="36" cy="22" rx="10" ry="18" fill="#c9a227" opacity="0.35" transform="rotate(180 36 36)" />
+        <ellipse cx="36" cy="22" rx="10" ry="18" fill="#c9a227" opacity="0.35" transform="rotate(-108 36 36)" />
+        <circle cx="36" cy="36" r="8" fill="#c8102e" opacity="0.45" />
+      </svg>
+      <svg width="120" height="36" viewBox="0 0 120 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 18h120M10 18c8 12 22 12 30 0s22-12 30 0 22 12 30 0 22-12 30 0" stroke="#c9a227" stroke-width="1.2" opacity="0.65" />
+        <circle cx="60" cy="18" r="3" fill="#1e3a5f" opacity="0.8" />
+      </svg>
+    </div>
+
+    <header class="masthead">
+      <h1>英语口语语伴</h1>
+      <div class="masthead-deco-row" aria-hidden="true">
+        <svg width="48" height="64" viewBox="0 0 48 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 4 L38 52 L10 52 Z" fill="#c9a227" opacity="0.35" />
+          <rect x="8" y="52" width="32" height="8" rx="1" fill="#c9a227" opacity="0.5" />
+          <rect x="14" y="60" width="20" height="4" fill="#1e3a5f" opacity="0.6" />
+        </svg>
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M28 6 Q44 20 40 36 Q36 48 28 50 Q20 48 16 36 Q12 20 28 6" stroke="#c9a227" stroke-width="1.5" fill="none" opacity="0.7" />
+          <path d="M28 14 Q38 24 34 34" stroke="#c8102e" stroke-width="1" fill="none" opacity="0.5" />
+        </svg>
+      </div>
+      <p class="sub-en">English Speaking Buddy: Real-time AI partner for spoken English practice</p>
+      <p class="sub-zh">中国学生英语口语练习实时语伴</p>
+      <div class="tips">
+        <div>Please connect first, then start speaking in English. 建议使用 Chrome 或 Edge，并允许麦克风权限。</div>
+      </div>
+    </header>
+
+    <section class="panel" aria-labelledby="scenarios-heading">
+      <div class="panel-deco" aria-hidden="true">
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="22" cy="22" r="20" stroke="#c9a227" stroke-width="1" opacity="0.4" />
+          <path d="M22 6v32M6 22h32" stroke="#c9a227" stroke-width="0.8" opacity="0.35" />
+          <circle cx="22" cy="22" r="4" fill="#c8102e" opacity="0.35" />
+        </svg>
+      </div>
+      <h2 class="panel-title" id="scenarios-heading">
+        <span class="panel-title-en">Three practical speaking scenarios.</span>
+        三个实用场景 · 点击卡片可将示例问题填入输入框
+      </h2>
+      <div class="scenario-cards" id="scenarioCards"></div>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <button id="connectBtn" type="button" class="btn btn-primary">
+          Connect Buddy · 连接语伴
+        </button>
+        <button id="disconnectBtn" type="button" class="btn">
+          Disconnect · 断开
+        </button>
+        <button id="newRoomBtn" type="button" class="btn">
+          New Room · 新房间
+        </button>
+        <button id="micBtn" type="button" class="btn" disabled title="先进房后再开麦克风">
+          Open Mic · 开启麦克风
+        </button>
+      </div>
+      <div id="status">Loading... · 准备中…</div>
+
+      <details class="advanced-conn">
+        <summary>Advanced Connection · 高级连接</summary>
+        <div class="inner">
+          <div class="grid">
+            <div class="field">
+              <label>LIVEKIT_URL</label>
+              <input id="livekitUrl" type="text" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label>Room</label>
+              <input id="room" type="text" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label>Identity</label>
+              <input id="identity" type="text" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label>Display Name</label>
+              <input id="name" type="text" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <div class="stage">
+      <div class="video-box">
+        <video id="agentVideo" autoplay playsinline></video>
+      </div>
+      <div class="panel">
+        <div class="panel-deco" aria-hidden="true">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 20c6-8 14-8 20 0s14 8 20 0" stroke="#67e8f9" stroke-width="1" opacity="0.35" fill="none" />
+            <path d="M4 24c6 8 14 8 20 0s14-8 20 0" stroke="#c9a227" stroke-width="1" opacity="0.4" fill="none" />
+          </svg>
+        </div>
+        <h3 class="panel-title">
+          <span class="panel-title-en">Conversation</span>
+          对话记录
+        </h3>
+        <div id="chatBox" class="chat-box"></div>
+        <div class="chat-input">
+          <input id="chatInput" type="text"
+            placeholder="输入中英文均可，回车发送" />
+          <button id="sendBtn" type="button" class="btn">
+            Send · 发送
+          </button>
+        </div>
+        <details class="logs-wrap">
+          <summary>Debug Logs · 调试日志</summary>
+          <div id="logs" class="log"></div>
+        </details>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="page-deco-strip" style="margin-bottom: 12px; opacity: 0.55" aria-hidden="true">
+        <svg width="100" height="28" viewBox="0 0 100 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 14 L16 6 L28 14 L40 6 L52 14 L64 6 L76 14 L88 6 L96 14" stroke="#c9a227" stroke-width="1.2" fill="none" />
+        </svg>
+      </div>
+      <div>感谢使用英语口语语伴 · Keep speaking every day.</div>
+    </footer>
+  </div>
+
+  <script type="module">
+    import {
+      ConnectionState,
+      Room,
+      RoomEvent,
+      Track,
+    } from "https://cdn.jsdelivr.net/npm/livekit-client@2.15.14/dist/livekit-client.esm.mjs";
+    import { pinyin } from "https://esm.sh/pinyin-pro@3.26.0";
+
+    const livekitUrlEl = document.getElementById("livekitUrl");
+    const roomEl = document.getElementById("room");
+    const identityEl = document.getElementById("identity");
+    const nameEl = document.getElementById("name");
+    const statusEl = document.getElementById("status");
+    const logsEl = document.getElementById("logs");
+    const videoEl = document.getElementById("agentVideo");
+    const chatBoxEl = document.getElementById("chatBox");
+    const chatInputEl = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const scenarioCardsEl = document.getElementById("scenarioCards");
+
+    const connectBtn = document.getElementById("connectBtn");
+    const disconnectBtn = document.getElementById("disconnectBtn");
+    const newRoomBtn = document.getElementById("newRoomBtn");
+    const micBtn = document.getElementById("micBtn");
+
+    let room = null;
+    const lastShownText = { user: "", agent: "" };
+    let agentWaitIntervalId = null;
+
+    function stopAgentWaitTicker() {
+      if (agentWaitIntervalId !== null) {
+        clearInterval(agentWaitIntervalId);
+        agentWaitIntervalId = null;
+      }
+    }
+
+    /** 已进房但尚无远端参与者时，每秒刷新状态（云端冷启动 + Simli 常见数十秒） */
+    function startAgentWaitTicker() {
+      stopAgentWaitTicker();
+      const started = Date.now();
+      agentWaitIntervalId = setInterval(() => {
+        if (!room || room.state !== ConnectionState.Connected) {
+          stopAgentWaitTicker();
+          return;
+        }
+        if (room.remoteParticipants.size > 0) {
+          stopAgentWaitTicker();
+          return;
+        }
+        const sec = Math.floor((Date.now() - started) / 1000);
+        setStatus(
+          `已进房，等待语伴 ${sec}s。云端 Agent 冷启动或 Simli 初始化时常见 20-60 秒，可先打字对话；需要语音请点「开启麦克风」。`,
+        );
+      }, 1000);
+    }
+
+    function withTimeout(promise, ms, label) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`${label} 超过 ${ms / 1000} 秒仍未完成（可检查网络、VPN，或 LIVEKIT_URL 是否为 wss://）`)), ms);
+        }),
+      ]);
+    }
+
+    function attachExistingRemoteTracks(r) {
+      if (!r) return;
+      try {
+        r.remoteParticipants.forEach((p) => {
+          const pubs = p.trackPublications;
+          const values = pubs && typeof pubs.values === "function" ? Array.from(pubs.values()) : [];
+          for (const pub of values) {
+            const t = pub.track;
+            if (!t || !pub.isSubscribed) continue;
+            if (t.kind === Track.Kind.Video) t.attach(videoEl);
+            if (t.kind === Track.Kind.Audio) t.attach();
+            log(`attached existing ${t.kind} from ${p.identity}`);
+          }
+        });
+      } catch (e) {
+        log(`attachExistingRemoteTracks: ${e?.message || e}`);
+      }
+    }
+
+    const HAN_IN_MESSAGE_RE = /[\u3007\u4e00-\u9fff\u3400-\u4dbf]/;
+
+    function normalizeCnText(text) {
+      return (text || "").replace(/[^\u4e00-\u9fffa-zA-Z0-9]/g, "").toLowerCase();
+    }
+
+    function textContainsHanzi(text) {
+      return HAN_IN_MESSAGE_RE.test(text || "");
+    }
+
+    function buildChatTextHtml(text) {
+      const raw = text || "";
+      const hanHtml = escapeHtml(raw);
+      if (!textContainsHanzi(raw)) {
+        return `<div class="text-han">${hanHtml}</div>`;
+      }
+      let py = "";
+      try {
+        py = pinyin(raw, { toneType: "symbol", type: "string" });
+      } catch (_) {
+        py = "";
+      }
+      const pyLine = escapeHtml(String(py).trim());
+      if (!pyLine) {
+        return `<div class="text-han">${hanHtml}</div>`;
+      }
+      return `<div class="text-pinyin" lang="zh-Latn">${pyLine}</div><div class="text-han">${hanHtml}</div>`;
+    }
+
+    async function fetchZhTranslation(text) {
+      const resp = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      let data = {};
+      try {
+        data = await resp.json();
+      } catch (_) {
+        data = {};
+      }
+      if (!resp.ok) {
+        const d = data?.detail;
+        const msg = typeof d === "string" ? d : Array.isArray(d) ? d.map((x) => x.msg || x).join("; ") : resp.statusText;
+        throw new Error(msg || "translate failed");
+      }
+      return data;
+    }
+
+    function shouldIgnoreUserNoise(text) {
+      const normalized = normalizeCnText(text);
+      if (!normalized) return true;
+      const canned = new Set([
+        normalizeCnText("好的，请提供您希望转写的语音。"),
+        normalizeCnText("好的，请提供语音内容，我将帮助您进行转写。"),
+        normalizeCnText("请提供您希望转写的语音。"),
+      ]);
+      if (canned.has(normalized)) return true;
+      if (
+        (normalized.includes("转写") ||
+          (normalized.includes("语音") && normalized.includes("提供"))) &&
+        (normalized.includes("请") || normalized.includes("好的"))
+      ) {
+        return true;
+      }
+      return false;
+    }
+
+    function appendChat(role, text) {
+      const t = (text || "").trim();
+      if (!t) return;
+      const norm = normalizeCnText(t);
+      if (lastShownText[role] === norm) return;
+      lastShownText[role] = norm;
+
+      const item = document.createElement("div");
+      item.className = `msg ${role}`;
+      const roleLabel = role === "user" ? "你" : "语伴";
+      item.innerHTML = `
+          <div class="role">${roleLabel} · ${new Date().toLocaleTimeString()}</div>
+          <div class="text">${buildChatTextHtml(t)}<div class="text-translation is-pending" lang="zh-CN" aria-label="中文释义">翻译中…</div></div>
+        `;
+      chatBoxEl.appendChild(item);
+      chatBoxEl.scrollTop = chatBoxEl.scrollHeight;
+
+      const translationEl = item.querySelector(".text-translation");
+      fetchZhTranslation(t)
+        .then((data) => {
+          if (!translationEl) return;
+          if (data && data.ok === false && !(data.translation || "").trim()) {
+            translationEl.remove();
+            return;
+          }
+          const translation = (data && data.translation ? String(data.translation) : "").trim();
+          if (!translation) {
+            translationEl.remove();
+            return;
+          }
+          translationEl.textContent = translation;
+          translationEl.classList.remove("is-pending");
+        })
+        .catch((err) => {
+          const hint = err?.message || String(err);
+          console.warn("[english-buddy translate]", hint);
+          if (!translationEl) return;
+          translationEl.textContent = "翻译暂不可用";
+          translationEl.title = hint.length > 500 ? `${hint.slice(0, 500)}…` : hint;
+          translationEl.classList.remove("is-pending");
+        });
+    }
+
+    function escapeHtml(str) {
+      return (str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function log(msg) {
+      const line = `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+      logsEl.textContent += line;
+      console.log("[realtime-web]", msg);
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function setTextInputEnabled(on) {
+      chatInputEl.disabled = !on;
+      sendBtn.disabled = !on;
+    }
+
+    function buildFreshRoomName(base) {
+      const clean = (base || "english-speaking-room").replace(/\s+/g, "-");
+      return `${clean}-${Date.now().toString().slice(-6)}`;
+    }
+
+    function buildFreshIdentity(base) {
+      const clean = (base || "student-demo").replace(/\s+/g, "-");
+      return `${clean}-${Date.now().toString().slice(-4)}`;
+    }
+
+    function renderScenarios(scenarios) {
+      scenarioCardsEl.innerHTML = "";
+      (scenarios || []).forEach((s) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "scenario-card";
+        const p = s.prompt || "";
+        btn.innerHTML = `
+          <span class="sc-en">${escapeHtml(s.titleEn || "")}</span>
+          <span class="sc-zh">${escapeHtml(s.titleZh || "")}</span>
+          <span class="sc-blurb-en">${escapeHtml(s.blurbEn || "")}</span>
+          <span class="sc-blurb-zh">${escapeHtml(s.blurbZh || "")}</span>
+        `;
+        btn.addEventListener("click", () => {
+          chatInputEl.value = p;
+          chatInputEl.focus();
+        });
+        scenarioCardsEl.appendChild(btn);
+      });
+    }
+
+    async function loadConfig() {
+      const resp = await fetch("/api/config");
+      if (!resp.ok) throw new Error(await resp.text());
+      const cfg = await resp.json();
+      livekitUrlEl.value = cfg.livekitUrl || "";
+      roomEl.value = buildFreshRoomName(cfg.defaultRoom || "english-speaking-room");
+      const defaultIdentity = cfg.defaultIdentity || "student-demo";
+      identityEl.value = buildFreshIdentity(defaultIdentity);
+      nameEl.value = defaultIdentity;
+      renderScenarios(cfg.scenarios);
+      const adv = document.querySelector(".advanced-conn");
+      if (cfg.showAdvancedConnection === false && adv) {
+        adv.classList.add("is-hidden");
+      }
+      setStatus("请点击连接语伴开始。");
+    }
+
+    async function fetchToken() {
+      const payload = {
+        room: roomEl.value.trim(),
+        identity: identityEl.value.trim(),
+        name: nameEl.value.trim(),
+      };
+      const resp = await fetch("/api/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      return resp.json();
+    }
+
+    async function connect() {
+      try {
+        if (room) {
+          await room.disconnect();
+          room = null;
+        }
+        logsEl.textContent = "";
+        chatBoxEl.innerHTML = "";
+        lastShownText.user = "";
+        lastShownText.agent = "";
+
+        stopAgentWaitTicker();
+        micBtn.disabled = true;
+        setStatus("正在申请 token...");
+        const tokenResp = await fetchToken();
+        const token = tokenResp.token;
+        if (!token) throw new Error("token missing in /api/token response");
+
+        if (tokenResp.identity) {
+          identityEl.value = tokenResp.identity;
+          log(`token received, identity=${tokenResp.identity}`);
+        } else {
+          log("token received");
+        }
+
+        setStatus("正在连接 LiveKit...");
+        room = new Room({ adaptiveStream: true, dynacast: true });
+
+        room.on(RoomEvent.ConnectionStateChanged, (state) => {
+          log(`connection state: ${state}`);
+        });
+        room.on(RoomEvent.Reconnecting, () => log("livekit: reconnecting…"));
+        room.on(RoomEvent.Reconnected, () => log("livekit: reconnected"));
+
+        room.on(RoomEvent.MediaDevicesError, (e) => {
+          log(`media devices error: ${e?.message || String(e)}`);
+        });
+
+        room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
+          log(`track subscribed: ${track.kind}`);
+          if (track.kind === Track.Kind.Video) track.attach(videoEl);
+          if (track.kind === Track.Kind.Audio) track.attach();
+          if (participant && !participant.isLocal && track.kind === Track.Kind.Video) {
+            stopAgentWaitTicker();
+            setStatus(
+              "已收到语伴视频画面。",
+            );
+          }
+        });
+
+        room.on(RoomEvent.TrackUnsubscribed, (track) => {
+          log(`track unsubscribed: ${track.kind}`);
+          track.detach();
+        });
+
+        room.on(RoomEvent.Connected, () => {
+          log("room connected");
+          setTextInputEnabled(true);
+          micBtn.disabled = false;
+          if (room.remoteParticipants.size === 0) {
+            setStatus(
+              "已连接；正在等待语伴进房（云端冷启动时可能需数十秒）...",
+            );
+            startAgentWaitTicker();
+          } else {
+            attachExistingRemoteTracks(room);
+            setStatus(
+              "已连接；可先文字对话，需要语音请点「开启麦克风」。",
+            );
+          }
+        });
+
+        room.on(RoomEvent.Disconnected, () => {
+          stopAgentWaitTicker();
+          setStatus("已断开连接");
+          log("room disconnected");
+          setTextInputEnabled(false);
+          micBtn.disabled = true;
+        });
+
+        room.on(RoomEvent.ParticipantConnected, (p) => {
+          log(`participant connected: ${p.identity}`);
+          if (!p.isLocal) {
+            stopAgentWaitTicker();
+            setStatus(
+              "语伴已进房；若画面仍黑请再等几秒（Simli 推流）。可先打字或点「开启麦克风」。",
+            );
+          }
+          attachExistingRemoteTracks(room);
+        });
+        room.on(RoomEvent.ParticipantDisconnected, (p) => log(`participant disconnected: ${p.identity}`));
+
+        room.on(RoomEvent.TranscriptionReceived, (segments, participant) => {
+          const list = (segments || []).filter((s) => s && s.text);
+          const text = list.map((s) => s.text).join(" ").trim();
+          if (!text) return;
+          const isFinal = list.some((s) => s.final === true);
+          if (!isFinal) return;
+          const role = participant && participant.isLocal ? "user" : "agent";
+          if (role === "user" && shouldIgnoreUserNoise(text)) {
+            log(`ignore noise user transcript: ${text}`);
+            return;
+          }
+          appendChat(role, text);
+          log(`transcription ${role} final: ${text}`);
+        });
+
+        let ttsShownKeys = new Set();
+
+        room.on(RoomEvent.DataReceived, (payload) => {
+          try {
+            let decoded = "";
+            if (typeof payload === "string") {
+              decoded = payload;
+            } else if (payload instanceof Uint8Array) {
+              decoded = new TextDecoder().decode(payload);
+            } else if (payload instanceof ArrayBuffer) {
+              decoded = new TextDecoder().decode(new Uint8Array(payload));
+            } else if (payload && payload.buffer instanceof ArrayBuffer) {
+              decoded = new TextDecoder().decode(new Uint8Array(payload.buffer));
+            } else {
+              decoded = String(payload || "");
+            }
+            if (!decoded) return;
+
+            log(`data received: ${decoded.slice(0, 160)}`);
+
+            let parsed = null;
+            try { parsed = JSON.parse(decoded); } catch (_) { }
+
+            if (!parsed) return;
+
+            if (parsed.type === "user_transcript" && parsed.text) {
+              if (!shouldIgnoreUserNoise(parsed.text)) {
+                appendChat("user", parsed.text);
+                log(`user: ${parsed.text}`);
+              }
+              return;
+            }
+
+            if (parsed.type === "tts_spoken_text" && parsed.text) {
+              const key = normalizeCnText(parsed.text);
+              ttsShownKeys.add(key);
+              appendChat("agent", parsed.text);
+              log(`buddy(tts): ${parsed.text}`);
+              return;
+            }
+
+            if (parsed.type === "llm_text" && parsed.text) {
+              const key = normalizeCnText(parsed.text);
+              if (ttsShownKeys.has(key)) {
+                log(`buddy(llm) skipped, tts already shown: ${parsed.text}`);
+                return;
+              }
+              appendChat("agent", parsed.text);
+              log(`buddy(llm): ${parsed.text}`);
+              return;
+            }
+          } catch (_) {
+            log("data packet parse error");
+          }
+        });
+
+        setTextInputEnabled(false);
+        const lkUrl = livekitUrlEl.value.trim();
+        if (!lkUrl.startsWith("wss://") && !lkUrl.startsWith("ws://")) {
+          throw new Error("LIVEKIT_URL 应以 wss:// 开头，请检查 Railway Variables 或高级连接里的地址");
+        }
+        await withTimeout(room.connect(lkUrl, token), 60000, "LiveKit 信令连接");
+        log(`room.connect 完成，state=${room.state}，远端参与者数=${room.remoteParticipants.size}`);
+        attachExistingRemoteTracks(room);
+
+        if (room.state === ConnectionState.Connected) {
+          setTextInputEnabled(true);
+          micBtn.disabled = false;
+          if (room.remoteParticipants.size === 0 && agentWaitIntervalId === null) {
+            startAgentWaitTicker();
+          }
+        }
+      } catch (err) {
+        const msg = err?.message || String(err);
+        setStatus(`连接失败：${msg}`);
+        log(`connect error: ${msg}`);
+      }
+    }
+
+    async function disconnect() {
+      stopAgentWaitTicker();
+      if (room) {
+        await room.disconnect();
+        room = null;
+      }
+      micBtn.disabled = true;
+      setStatus("已断开连接");
+    }
+
+    micBtn.addEventListener("click", async () => {
+      if (!room || room.state !== ConnectionState.Connected) {
+        setStatus("请先连接语伴");
+        return;
+      }
+      micBtn.disabled = true;
+      setStatus("正在请求麦克风...");
+      try {
+        await withTimeout(room.localParticipant.setMicrophoneEnabled(true), 35000, "麦克风");
+        log("microphone enabled");
+        setStatus("麦克风已开，可语音对话");
+      } catch (e) {
+        const m = e?.message || String(e);
+        log(`microphone failed: ${m}`);
+        setStatus(`开麦失败：${m}（可继续用文字）`);
+        micBtn.disabled = false;
+      }
+    });
+
+    const CHAT_TOPIC = "lk.chat";
+
+    async function sendText() {
+      const text = chatInputEl.value.trim();
+      if (!text) return;
+      if (!room || room.state !== ConnectionState.Connected) {
+        log("文字发送失败：请先点击连接语伴并等待已连接");
+        setStatus("未连接，无法发文字。");
+        return;
+      }
+      try {
+        const lp = room.localParticipant;
+        if (!lp || typeof lp.sendText !== "function") {
+          log("当前 SDK 无 sendText，请刷新页面或升级 livekit-client");
+          return;
+        }
+        await lp.sendText(text, { topic: CHAT_TOPIC });
+        appendChat("user", text);
+        chatInputEl.value = "";
+        log("text sent via sendText");
+      } catch (err) {
+        log(`send text error: ${err?.message || String(err)}`);
+      }
+    }
+
+    connectBtn.addEventListener("click", connect);
+    disconnectBtn.addEventListener("click", disconnect);
+    newRoomBtn.addEventListener("click", () => {
+      roomEl.value = buildFreshRoomName(roomEl.value || "english-speaking-room");
+      identityEl.value = buildFreshIdentity(identityEl.value || "student-demo");
+      setStatus(`新房间：${roomEl.value}`);
+    });
+    sendBtn.addEventListener("click", sendText);
+    chatInputEl.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || e.shiftKey || e.isComposing) return;
+      e.preventDefault();
+      sendText();
+    });
+
+    setTextInputEnabled(false);
+    micBtn.disabled = true;
+
+    loadConfig().catch((err) => {
+      const msg = err?.message || String(err);
+      setStatus(`配置加载失败：${msg}`);
+      log(`config error: ${msg}`);
+    });
+  </script>
+</body>
+
+</html>

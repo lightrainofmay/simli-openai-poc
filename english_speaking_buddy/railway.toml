@@ -1,0 +1,10 @@
+# https://docs.railway.com/deploy/dockerfiles
+# Railway 项目 Root Directory 指向本仓库根目录即可。
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.web"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 300

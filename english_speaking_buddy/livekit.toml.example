@@ -1,0 +1,10 @@
+# Copy to livekit.toml after `lk cloud auth` / project link.
+# livekit.toml is gitignored; do not commit real agent IDs from another project.
+#
+# Example shape (values from LiveKit CLI after linking):
+#
+# [project]
+#   subdomain = "your-subdomain"
+#
+# [agent]
+#   id = "YOUR_AGENT_ID"
