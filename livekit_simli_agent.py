@@ -18,6 +18,7 @@ from livekit.agents import (
     JobProcess,
     MetricsCollectedEvent,
     RoomInputOptions,
+    TurnHandlingOptions,
     WorkerOptions,
     cli,
     metrics,
@@ -163,6 +164,69 @@ def load_silero_vad() -> silero.VAD:
     )
 
 
+def _float_env(name: str, default: float) -> float:
+    raw = (os.getenv(name) or "").strip()
+    if not raw:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        logger.warning("invalid %s=%r, using %s", name, raw, default)
+        return default
+
+
+def _bool_env(name: str, default: bool) -> bool:
+    raw = (os.getenv(name) or "").strip().lower()
+    if not raw:
+        return default
+    return raw not in ("0", "false", "no", "off")
+
+
+def build_turn_handling(
+    *,
+    turn_detection: object,
+    preemptive_generation_enabled: bool,
+) -> TurnHandlingOptions:
+    """Tune endpointing vs latency and how easily user audio can interrupt agent TTS."""
+    min_ep = _float_env("ENDPOINTING_MIN_DELAY_SEC", 0.42)
+    max_ep = _float_env("ENDPOINTING_MAX_DELAY_SEC", 3.0)
+    min_intr = _float_env("INTERRUPTION_MIN_DURATION_SEC", 0.85)
+    false_raw = (os.getenv("FALSE_INTERRUPTION_TIMEOUT_SEC") or "2.5").strip().lower()
+    if false_raw in ("none", "off", "disable", "-1"):
+        false_timeout: float | None = None
+    else:
+        try:
+            false_timeout = float(false_raw)
+        except ValueError:
+            logger.warning("invalid FALSE_INTERRUPTION_TIMEOUT_SEC=%r, using 2.5", false_raw)
+            false_timeout = 2.5
+
+    interruption: dict = {
+        "min_duration": min_intr,
+        "resume_false_interruption": _bool_env("RESUME_FALSE_INTERRUPPTION", True),
+    }
+    if false_timeout is not None:
+        interruption["false_interruption_timeout"] = false_timeout
+    if not _bool_env("INTERRUPTION_ENABLED", True):
+        interruption["enabled"] = False
+
+    th: TurnHandlingOptions = {
+        "turn_detection": turn_detection,  # type: ignore[typeddict-item]
+        "endpointing": {"min_delay": min_ep, "max_delay": max_ep},
+        "interruption": interruption,  # type: ignore[typeddict-item]
+        "preemptive_generation": {"enabled": preemptive_generation_enabled},
+    }
+    logger.info(
+        "turn_handling: endpointing min/max=%.2f/%.2fs, interrupt min_duration=%.2fs, "
+        "preemptive_gen=%s",
+        min_ep,
+        max_ep,
+        min_intr,
+        preemptive_generation_enabled,
+    )
+    return th
+
+
 def prewarm(proc: JobProcess) -> None:
     # Warmed worker processes may expose VAD here; some job subprocess paths omit it.
     proc.userdata["vad"] = load_silero_vad()
@@ -282,12 +346,12 @@ async def entrypoint(ctx: JobContext) -> None:
         cartesia_word_ts,
     )
     speech_tts.prewarm()
-    _prewarm_raw = (os.getenv("CARTESIA_PREWARM_SEC") or "0.35").strip()
+    _prewarm_raw = (os.getenv("CARTESIA_PREWARM_SEC") or "0.12").strip()
     try:
         cartesia_prewarm_sec = float(_prewarm_raw)
     except ValueError:
-        logger.warning("invalid CARTESIA_PREWARM_SEC=%r, using 0.35", _prewarm_raw)
-        cartesia_prewarm_sec = 0.35
+        logger.warning("invalid CARTESIA_PREWARM_SEC=%r, using 0.12", _prewarm_raw)
+        cartesia_prewarm_sec = 0.12
     if cartesia_prewarm_sec > 0:
         logger.info(
             "Cartesia prewarm: sleep %.2fs so first TTS websocket is ready (set CARTESIA_PREWARM_SEC=0 to skip)",
@@ -327,9 +391,11 @@ async def entrypoint(ctx: JobContext) -> None:
         stt=stt,
         llm=llm_component,
         tts=speech_tts,
-        turn_detection=turn_detection,
         vad=vad,
-        preemptive_generation=preemptive,
+        turn_handling=build_turn_handling(
+            turn_detection=turn_detection,
+            preemptive_generation_enabled=preemptive,
+        ),
     )
 
     async def tts_only_reply(transcript: str) -> None:
@@ -407,8 +473,13 @@ async def entrypoint(ctx: JobContext) -> None:
 
         @session.on("agent_false_interruption")
         def _on_agent_false_interruption(ev: AgentFalseInterruptionEvent) -> None:
-            logger.info("false positive interruption, resuming")
-            session.generate_reply(instructions=ev.extra_instructions or NOT_GIVEN)
+            if ev.resumed:
+                logger.info("agent_false_interruption: playback resumed by runtime")
+            else:
+                logger.warning(
+                    "agent_false_interruption: runtime did not resume (audio may not support pause); "
+                    "check FALSE_INTERRUPTION_TIMEOUT_SEC / RESUME_FALSE_INTERRUPTION"
+                )
 
     usage_collector = metrics.UsageCollector()
 
